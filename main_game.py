@@ -82,7 +82,7 @@ class Vala(Obstacle):
         self.x -= speed
 
     def draw(self, surface):
-        pygame.draw.line(surface, BLACK, (self.x, GROUND_Y), (self.x + self.width, GROUND_Y), 4)
+        pygame.draw.line(surface, BLACK, (self.x, GROUND_Y + 10), (self.x + self.width, GROUND_Y + 10), 4)
 
     def collides_with(self, skater_rect):
         return (

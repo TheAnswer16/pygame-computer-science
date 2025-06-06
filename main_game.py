@@ -4,7 +4,7 @@ import sys
 
 # Inicialização
 pygame.init()
-WIDTH, HEIGHT = 800, 300
+WIDTH, HEIGHT = 900, 300
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Skater Run")
 clock = pygame.time.Clock()
@@ -17,6 +17,7 @@ GROUND_Y = HEIGHT - 40
 
 # Carregar imagem do skatista
 SKATER_IMG = pygame.image.load("assets/skater_running.png").convert_alpha()
+BENCH_IMG =  pygame.image.load("assets/bench.png").convert_alpha()
 
 class Skater:
     def __init__(self):
@@ -26,8 +27,8 @@ class Skater:
         self.x = 50
         self.y = GROUND_Y - self.height
         self.velocity = 0
-        self.gravity = 0.6
-        self.jump_strength = -20
+        self.gravity = 0.7
+        self.jump_strength = -26
         self.is_jumping = False
 
     def update(self):
@@ -57,15 +58,16 @@ class Obstacle:
 
 class Banco(Obstacle):
     def __init__(self):
-        self.width = 40
-        self.height = 30
-        self.rect = pygame.Rect(WIDTH, GROUND_Y - self.height, self.width, self.height)
+        self.image = pygame.transform.scale(BENCH_IMG, (90, 80))        
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
+        self.rect = pygame.Rect(WIDTH, GROUND_Y - self.height + 12, self.width, self.height)
 
     def update(self, speed):
         self.rect.x -= speed
 
     def draw(self, surface):
-        pygame.draw.rect(surface, BLACK, self.rect)
+       surface.blit(self.image, self.rect)
 
     def collides_with(self, skater_rect):
         return self.rect.colliderect(skater_rect)
@@ -82,7 +84,7 @@ class Vala(Obstacle):
         self.x -= speed
 
     def draw(self, surface):
-        pygame.draw.line(surface, BLACK, (self.x, GROUND_Y + 10), (self.x + self.width, GROUND_Y + 10), 4)
+        pygame.draw.line(surface, BLACK, (self.x, GROUND_Y + 36), (self.x + self.width, GROUND_Y + 36), 4)
 
     def collides_with(self, skater_rect):
         return (
@@ -94,13 +96,36 @@ class Vala(Obstacle):
     def is_off_screen(self):
         return self.x + self.width < 0
 
+
+class HighScoreManager:
+
+
+    def get_high_score():
+
+        import configparser
+        cfg = configparser.ConfigParser()
+        cfg.read("settings.ini")
+        return cfg.getint("screen", "high_score", fallback=0)
+
+    def set_high_score(score):
+        import configparser
+        cfg = configparser.ConfigParser()
+        cfg.read("settings.ini")
+        if not cfg.has_section("screen"):
+            cfg.add_section("screen")
+        cfg.set("screen", "high_score", str(score))
+        with open("settings.ini", "w") as configfile:
+            cfg.write(configfile)
+
+
 class Game:
+
     def __init__(self):
         self.skater = Skater()
         self.obstacles = []
         self.platforms = [pygame.Rect(0, GROUND_Y, WIDTH, 40)]
         self.score = 0
-        self.high_score = 0
+        self.high_score = HighScoreManager.get_high_score()
         self.speed = 6
 
     def reset(self):
@@ -160,6 +185,7 @@ class Game:
                 obs.draw(SCREEN)
                 if obs.collides_with(skater_rect):
                     self.high_score = max(self.score, self.high_score)
+                    HighScoreManager.set_high_score(self.high_score)
                     self.reset()
                     break
                 if obs.is_off_screen():

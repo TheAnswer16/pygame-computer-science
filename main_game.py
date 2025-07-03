@@ -17,6 +17,7 @@ BLACK = (0, 0, 0)
 GROUND_Y = HEIGHT - 40
 
 # Imagens
+BACKGROUND_IMG = pygame.image.load("assets/sky.png").convert()
 SKATER_IMG = pygame.image.load("assets/skater_running.png").convert_alpha()
 BENCH_IMG = pygame.image.load("assets/bench.png").convert_alpha()
 
@@ -90,7 +91,7 @@ class Banco(Obstacle):
         self.image = pygame.transform.scale(BENCH_IMG, (90, 80))
         self.width = self.image.get_width()
         self.height = self.image.get_height()
-        self.rect = pygame.Rect(WIDTH, GROUND_Y - self.height + 12, self.width, self.height)
+        self.rect = pygame.Rect(WIDTH, GROUND_Y - self.height + 18, self.width, self.height)
 
     def update(self, speed):
         self.rect.x -= speed
@@ -174,7 +175,7 @@ class Game:
         running = True
         while running:
             clock.tick(60)
-            SCREEN.fill(WHITE)
+            SCREEN.blit(BACKGROUND_IMG, (0, 0))
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

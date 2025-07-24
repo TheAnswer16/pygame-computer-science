@@ -4,6 +4,7 @@ import sys
 import configparser
 
 # Inicialização
+printf = print
 pygame.init()
 WIDTH, HEIGHT = 900, 300
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -18,8 +19,74 @@ GROUND_Y = HEIGHT - 40
 
 # Imagens
 BACKGROUND_IMG = pygame.image.load("assets/sky.png").convert()
+MENU_BACKGROUND = pygame.image.load("assets/menu_background.png").convert()
 SKATER_IMG = pygame.image.load("assets/skater_running.png").convert_alpha()
 BENCH_IMG = pygame.image.load("assets/bench.png").convert_alpha()
+
+def show_menu():
+    menu_items = ["Iniciar Jogo", "Ver High Score", "Sair"]
+    buttons = []
+    button_width, button_height = 250, 50
+    spacing = 20
+    start_y = HEIGHT // 2 - (button_height + spacing) * len(menu_items) // 2
+
+    for i, text in enumerate(menu_items):
+        x = WIDTH // 2 - button_width // 2
+        y = start_y + i * (button_height + spacing)
+        rect = pygame.Rect(x, y, button_width, button_height)
+        buttons.append((rect, text))
+
+    while True:
+        SCREEN.blit(MENU_BACKGROUND, (0, 0))
+        mouse_pos = pygame.mouse.get_pos()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                for rect, text in buttons:
+                    if rect.collidepoint(mouse_pos):
+                        return text.lower()
+
+        for rect, text in buttons:
+            color = (180, 180, 180) if rect.collidepoint(mouse_pos) else (220, 220, 220)
+            pygame.draw.rect(SCREEN, color, rect, border_radius=10)
+            pygame.draw.rect(SCREEN, BLACK, rect, 2, border_radius=10)
+            label = FONT.render(text, True, BLACK)
+            label_rect = label.get_rect(center=rect.center)
+            SCREEN.blit(label, label_rect)
+
+        pygame.display.update()
+        clock.tick(60)
+
+def show_high_score():
+    high = HighScoreManager.get_high_score()
+    back_rect = pygame.Rect(WIDTH // 2 - 100, HEIGHT - 70, 200, 40)
+
+    while True:
+        SCREEN.fill(WHITE)
+        label = FONT.render(f"High Score: {high}", True, BLACK)
+        label_rect = label.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 20))
+        SCREEN.blit(label, label_rect)
+
+        mouse_pos = pygame.mouse.get_pos()
+        pygame.draw.rect(SCREEN, (200, 200, 200), back_rect, border_radius=10)
+        pygame.draw.rect(SCREEN, BLACK, back_rect, 2, border_radius=10)
+        back_label = FONT.render("Voltar", True, BLACK)
+        back_label_rect = back_label.get_rect(center=back_rect.center)
+        SCREEN.blit(back_label, back_label_rect)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if back_rect.collidepoint(mouse_pos):
+                    return
+
+        pygame.display.update()
+        clock.tick(60)
 
 class Skater:
     def __init__(self):
@@ -32,7 +99,7 @@ class Skater:
         self.gravity = 0.7
         self.jump_strength = -26
         self.jump_buffer = 0
-        self.jump_buffer_time = 5  # frames
+        self.jump_buffer_time = 5
         self.terminal_velocity = 20
         self.is_jumping = False
         self.is_sliding = False
@@ -153,11 +220,7 @@ class Game:
         self.speed = 6
 
     def reset(self):
-        self.skater = Skater()
-        self.obstacles.clear()
-        self.platforms = [pygame.Rect(0, GROUND_Y, WIDTH, 40)]
-        self.score = 0
-        self.speed = 6
+        self.__init__()
 
     def generate_obstacle(self):
         return random.choice([Banco(), Vala()])
@@ -231,5 +294,12 @@ class Game:
             pygame.display.update()
 
 if __name__ == "__main__":
-    game = Game()
-    game.run()
+    while True:
+        action = show_menu()
+        if action == "iniciar jogo":
+            game = Game()
+            game.run()
+        elif action == "ver high score":
+            show_high_score()
+        elif action == "sair":
+            break
